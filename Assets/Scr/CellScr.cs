@@ -12,7 +12,6 @@ public class CellScr : MonoBehaviour
     [Header("Visual")]
     public SpriteRenderer sprite;
     private SpriteRenderer spriteRenderer;
-
     public Vector2Int GetPosition()
     {
         return new Vector2Int(x, y);
