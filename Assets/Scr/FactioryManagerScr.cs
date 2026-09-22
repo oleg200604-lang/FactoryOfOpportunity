@@ -4,237 +4,285 @@
     using UnityEngine.InputSystem;
     using UnityEngine.Rendering.Universal;
 
-    public class FactoryManagerScr : MonoBehaviour
+public class FactoryManagerScr : MonoBehaviour
+{
+    public static FactoryManagerScr Instance { get; private set; }
+
+    [Header("Groups")]
+    public List<ZoneGroup> groups = new List<ZoneGroup>();
+
+    public bool isBulder;
+    public int buildID;
+    [Header("Debug")]
+    [SerializeField] private bool autoFindCells = true;
+    [SerializeField] private bool logCellRegistration = false;
+    public bool isDeleting;
+    private readonly Dictionary<Vector2Int, CellScr> cellMap = new Dictionary<Vector2Int, CellScr>();
+
+    private CellScr firstSelected;
+    private CellScr secondSelected;
+
+
+    private void Awake()
     {
-        public static FactoryManagerScr Instance { get; private set; }
-
-        [Header("Groups")]
-        public List<ZoneGroup> groups = new List<ZoneGroup>();
-
-        public bool isBulder;
-        public int buildID;
-        [Header("Debug")]
-        [SerializeField] private bool autoFindCells = true;
-        [SerializeField] private bool logCellRegistration = false;
-
-        private readonly Dictionary<Vector2Int, CellScr> cellMap = new Dictionary<Vector2Int, CellScr>();
-
-        private CellScr firstSelected;
-        private CellScr secondSelected;
-
-
-        private void Awake()
+        if (Instance != null && Instance != this)
         {
-            if (Instance != null && Instance != this)
-            {
-                Debug.LogError(
-                    "На сцені існує більше одного FactoryManagerScr!"
-                );
-
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
-        }
-
-
-        private void Start()
-        {
-            ClearRuntimeGroups();
-            FindAllCells();
-
-            Debug.Log($"FactoryManager: знайдено {cellMap.Count} клітинок.");
-        }
-
-        private void ClearRuntimeGroups()
-        {
-            foreach (CellScr cell in FindObjectsByType<CellScr>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                cell.ownerGroup = null;
-            }
-
-            groups.Clear();
-        }
-        private void Update()
-        {
-            if (Mouse.current == null)
-                return;
-
-            if (!Mouse.current.leftButton.wasPressedThisFrame)
-                return;
-
-            CellScr clicked = GetCellUnderMouse();
-
-            if (clicked == null)
-                return;
-
-            if (isBulder == true)
-            {
-                HandleCellClick(clicked);
-            }
-        }
-        public void Bulds(int id)
-        {
-            isBulder = true;
-            buildID = id;
-        }
-        public void FindAllCells()
-        {
-            cellMap.Clear();
-
-            CellScr[] cells = FindObjectsByType<CellScr>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-
-            foreach (CellScr cell in cells)
-            {
-                RegisterCell(cell);
-            }
-        }
-        public void RegisterCell(CellScr cell)
-        {
-            if (cell == null)
-                return;
-
-            Vector2Int position = cell.GetPosition();
-
-            if (cellMap.TryGetValue(position, out CellScr existing))
-            {
-                if (existing != cell)
-                {
-                    Debug.LogError($"Конфлікт координат клітинок: " + $"({position.x}, {position.y}). " + $"Вже зареєстрована клітинка '{existing.name}', " + $"але намагається зареєструватися '{cell.name}'.");
-
-                    return;
-                }
-
-                return;
-            }
-
-            cellMap.Add(position, cell);
-
-            if (logCellRegistration)
-            {
-                Debug.Log($"Зареєстровано CellScr '{cell.name}' " + $"на координатах ({cell.x}, {cell.y})");
-            }
-        }
-        public void UnregisterCell(CellScr cell)
-        {
-            if (cell == null)
-                return;
-
-            Vector2Int position = cell.GetPosition();
-
-            if (cellMap.TryGetValue(position, out CellScr registered))
-            {
-                if (registered == cell)
-                {
-                    cellMap.Remove(position);
-                }
-            }
-        }
-        public bool TryGetCell(int x, int y, out CellScr cell)
-        {
-            return cellMap.TryGetValue(
-                new Vector2Int(x, y),
-                out cell
+            Debug.LogError(
+                "На сцені існує більше одного FactoryManagerScr!"
             );
-        }
-        private void HandleCellClick(CellScr clicked)
-        {
-            if (firstSelected == null)
-            {
-                firstSelected = clicked;
 
-                firstSelected.Highlight(true);
-
-                Debug.Log(
-                    $"Перша клітинка: ({clicked.x}, {clicked.y})"
-                );
-
-                return;
-            }
-
-            if (clicked == firstSelected)
-            {
-                firstSelected.Highlight(false);
-                firstSelected = null;
-
-                Debug.Log("Вибір скасовано.");
-
-                return;
-            }
-
-            secondSelected = clicked;
-
-            Debug.Log($"Друга клітинка: ({clicked.x}, {clicked.y})");
-
-            ZoneGroup group = CreateGroup(firstSelected, secondSelected);
-
-            if (group != null)
-            {
-                Debug.Log($"Створено групу '{group.groupName}' " + $"з {group.cells.Count} клітинок.");
-            }
-
-
-            ClearSelection();
+            Destroy(gameObject);
+            return;
         }
 
-
-        private void ClearSelection()
-        {
-            if (firstSelected != null)
-            {
-                firstSelected.Highlight(false);
-            }
-
-            if (secondSelected != null)
-            {
-                secondSelected.Highlight(false);
-            }
-
-            firstSelected = null;
-            secondSelected = null;
-            isBulder = false;
+        Instance = this;
     }
 
-        private CellScr GetCellUnderMouse()
-        {
-            if (Camera.main == null)
-            {
-                Debug.LogError("FactoryManagerScr: Camera.main не знайдена.");
 
-                return null;
+    private void Start()
+    {
+        ClearRuntimeGroups();
+        FindAllCells();
+
+        Debug.Log($"FactoryManager: знайдено {cellMap.Count} клітинок.");
+    }
+
+    private void ClearRuntimeGroups()
+    {
+        foreach (CellScr cell in FindObjectsByType<CellScr>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            cell.ownerGroup = null;
+        }
+
+        groups.Clear();
+    }
+    private void Update()
+    {
+        if (Mouse.current == null)
+            return;
+
+        if (!Mouse.current.leftButton.wasPressedThisFrame)
+            return;
+
+        CellScr clicked = GetCellUnderMouse();
+
+        if (clicked == null)
+            return;
+        if (isBulder == true)
+        {
+            HandleCellClick(clicked);
+            return;
+        }
+
+        if (isDeleting == true)
+        {
+            HandleDeleteClick(clicked);
+        }
+    }
+    public void Bulds(int id)
+    {
+        isBulder = true;
+        isDeleting = false;
+        buildID = id;
+    }
+    public void DeleteMode()
+    {
+        print("Destroy");
+        isDeleting = true;
+        isBulder = false;
+        ClearSelection();
+    }
+
+    private void HandleDeleteClick(CellScr clicked)
+    {
+        if (clicked.ownerGroup == null)
+        {
+            Debug.Log($"Клітинка ({clicked.x}, {clicked.y}) не належить жодній зоні.");
+            isDeleting = false;
+            return;
+        }
+
+        DeleteZone(clicked.ownerGroup);
+        isDeleting = false;
+    }
+    public void FindAllCells()
+    {
+        cellMap.Clear();
+
+        CellScr[] cells = FindObjectsByType<CellScr>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        foreach (CellScr cell in cells)
+        {
+            RegisterCell(cell);
+        }
+    }
+    public void RegisterCell(CellScr cell)
+    {
+        if (cell == null)
+            return;
+
+        Vector2Int position = cell.GetPosition();
+
+        if (cellMap.TryGetValue(position, out CellScr existing))
+        {
+            if (existing != cell)
+            {
+                Debug.LogError($"Конфлікт координат клітинок: " + $"({position.x}, {position.y}). " + $"Вже зареєстрована клітинка '{existing.name}', " + $"але намагається зареєструватися '{cell.name}'.");
+
+                return;
             }
 
+            return;
+        }
 
-            Vector2 screenPosition =
-                Mouse.current.position.ReadValue();
+        cellMap.Add(position, cell);
+
+        if (logCellRegistration)
+        {
+            Debug.Log($"Зареєстровано CellScr '{cell.name}' " + $"на координатах ({cell.x}, {cell.y})");
+        }
+    }
+    public void UnregisterCell(CellScr cell)
+    {
+        if (cell == null)
+            return;
+
+        Vector2Int position = cell.GetPosition();
+
+        if (cellMap.TryGetValue(position, out CellScr registered))
+        {
+            if (registered == cell)
+            {
+                cellMap.Remove(position);
+            }
+        }
+    }
+    public bool TryGetCell(int x, int y, out CellScr cell)
+    {
+        return cellMap.TryGetValue(
+            new Vector2Int(x, y),
+            out cell
+        );
+    }
+    private void HandleCellClick(CellScr clicked)
+    {
+        if (firstSelected == null)
+        {
+            firstSelected = clicked;
+
+            firstSelected.Highlight(true);
+
+            Debug.Log(
+                $"Перша клітинка: ({clicked.x}, {clicked.y})"
+            );
+
+            return;
+        }
+
+        if (clicked == firstSelected)
+        {
+            firstSelected.Highlight(false);
+            firstSelected = null;
+
+            Debug.Log("Вибір скасовано.");
+
+            return;
+        }
+
+        secondSelected = clicked;
+
+        Debug.Log($"Друга клітинка: ({clicked.x}, {clicked.y})");
+
+        ZoneGroup group = CreateGroup(firstSelected, secondSelected);
+
+        if (group != null)
+        {
+            Debug.Log($"Створено групу '{group.groupName}' " + $"з {group.cells.Count} клітинок.");
+        }
 
 
-            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, 0f));
+        ClearSelection();
+    }
 
 
-            Collider2D hit =
-                Physics2D.OverlapPoint(worldPosition);
+    private void ClearSelection()
+    {
+        if (firstSelected != null)
+        {
+            firstSelected.Highlight(false);
+        }
 
+        if (secondSelected != null)
+        {
+            secondSelected.Highlight(false);
+        }
 
-            if (hit == null)
-                return null;
+        firstSelected = null;
+        secondSelected = null;
+        isBulder = false;
+    }
 
-
-            CellScr cell = hit.GetComponent<CellScr>();
-
-            if (cell != null)
-                return cell;
-
-            cell = hit.GetComponentInParent<CellScr>();
-
-            if (cell != null)
-                return cell;
-
+    private CellScr GetCellUnderMouse()
+    {
+        if (Camera.main == null)
+        {
+            Debug.LogError("FactoryManagerScr: Camera.main не знайдена.");
 
             return null;
         }
 
+
+        Vector2 screenPosition =
+            Mouse.current.position.ReadValue();
+
+
+        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, 0f));
+
+
+        Collider2D hit =
+            Physics2D.OverlapPoint(worldPosition);
+
+
+        if (hit == null)
+            return null;
+
+
+        CellScr cell = hit.GetComponent<CellScr>();
+
+        if (cell != null)
+            return cell;
+
+        cell = hit.GetComponentInParent<CellScr>();
+
+        if (cell != null)
+            return cell;
+
+
+        return null;
+    }
+
+    public void DeleteZone(ZoneGroup group)
+    {
+        if (group == null)
+            return;
+
+        if (!groups.Contains(group))
+            return;
+
+        foreach (CellScr cell in group.cells)
+        {
+            if (cell != null && cell.ownerGroup == group)
+            {
+                cell.ownerGroup = null;
+                cell.UpdateColor();
+            }
+        }
+
+        groups.Remove(group);
+
+        Debug.Log($"Групу '{group.groupName}' видалено.");
+
+    }
     public ZoneGroup CreateGroup(CellScr a,CellScr b, string groupName = "New Group", Building d = null)
     {
         if (a == null || b == null)
@@ -264,6 +312,42 @@
 
         int minY = Mathf.Min(a.y, b.y);
         int maxY = Mathf.Max(a.y, b.y);
+        // Визначаємо тип будівлі
+        Building building = null;
+        switch (buildID)
+        {
+            case 1:
+                building = new Workshop();
+                break;
+
+            case 2:
+                building = new Research();
+                break;
+
+            case 3:
+                building = new Storage();
+                break;
+
+            case 4:
+                building = new Office();
+                break;
+
+            default:
+                Debug.LogWarning($"Невідомий buildID: {buildID}");
+
+                return null;
+        }
+        if (building is Workshop || building is Research)
+        {
+            int width = maxX - minX + 1;
+            int height = maxY - minY + 1;
+
+            if (width < 2 || height < 2)
+            {
+                Debug.LogWarning($"Не можна створити групу: " + $"мінімальний розмір для {building.GetType().Name} — 2x2 " + $"(отримано {width}x{height}).");
+                return null;
+            }
+        }
 
         List<CellScr> cellsInRect = new List<CellScr>();
 
@@ -324,38 +408,10 @@
         }
 
 
-        // Визначаємо тип будівлі
-        Building building = null;
 
-        switch (buildID)
-        {
-            case 1:
-                building = new Workshop();
-                break;
+        
 
-            case 2:
-                building = new Research();
-                break;
-
-            case 3:
-                building = new Storage();
-                break;
-
-            case 4:
-                building = new Office();
-                break;
-
-            default:
-                Debug.LogWarning($"Невідомий buildID: {buildID}");
-
-                return null;
-        }
-
-        ZoneGroup group = new ZoneGroup(
-            groupName,
-            cellsInRect,
-            building
-        );
+        ZoneGroup group = new ZoneGroup(groupName, cellsInRect, building);
 
         foreach (CellScr cell in cellsInRect)
         {
@@ -382,18 +438,17 @@
                 return false;
 
 
-        foreach (CellScr cell in group.cells)
-        {
-            if (cell != null &&
-                cell.ownerGroup == group)
+            foreach (CellScr cell in group.cells)
             {
-                cell.ownerGroup = null;
-                cell.UpdateColor();
+                if (cell != null &&
+                    cell.ownerGroup == group)
+                {
+                    cell.ownerGroup = null;
+                }
             }
-        }
 
 
-        groups.Remove(group);
+            groups.Remove(group);
 
             Debug.Log($"Групу '{group.groupName}' видалено.");
 
