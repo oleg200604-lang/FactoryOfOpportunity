@@ -6,11 +6,13 @@ public class GameManagerScr : MonoBehaviour
     public Commodity[] commodity;
     public float timer, timerSpeed, timeDay;
     public int day, season, year;
+    public FactoryManagerScr factory;
     private void Update()
     {
         if (timer <= 0)
         {
             UpdateDates();
+            UpdateTic();
         }
         else
         {
@@ -37,6 +39,10 @@ public class GameManagerScr : MonoBehaviour
             }
         }
         timer = timeDay;
+    }
+    public void UpdateTic()
+    {
+        factory.Tic();
     }
 }
 public abstract class Commodity
@@ -79,13 +85,27 @@ public enum MachineryType
 public class Clothing : Commodity
 {
     public ClothingType clothingType;
+    public ClothingStyleType clothingStyleType;
+
+    public void ClothingTypes(ClothingType clothingTypes)
+    {
+        clothingType = clothingTypes;
+    }
+
+    public void ClothingStyleTypes(ClothingStyleType clothingStyleTypes)
+    {
+        clothingStyleType = clothingStyleTypes;
+    }
 }
 
 public enum ClothingType
 {
     casual, formal, swimwear, winter
 }
-
+public enum ClothingStyleType
+{
+    classic, casual, sporty, boho, grunge, minimalism
+}
 [System.Serializable]
 public class Electronics : Commodity
 {

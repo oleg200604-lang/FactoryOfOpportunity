@@ -53,11 +53,21 @@ public interface Building
 public class Workshop : Building
 {
     public SchemeCommodity[] MachineTools;
+    public int production;
+    public void ProductionCycle(int productionPower)
+    {
+        production += productionPower;
+    }
 }
 
 public class Research : Building
 {
-
+    public int production;
+    public void ProductionCycle(int productionPower)
+    {
+        production += productionPower;
+        
+    }
 }
 
 public class Storage : Building

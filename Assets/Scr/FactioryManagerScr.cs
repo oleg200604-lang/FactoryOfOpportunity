@@ -47,6 +47,10 @@ public class FactoryManagerScr : MonoBehaviour
         Debug.Log($"FactoryManager: знайдено {cellMap.Count} клітинок.");
     }
 
+    public void Tic()
+    {
+        groups[0].Manufacturing();
+    }
     private void ClearRuntimeGroups()
     {
         foreach (CellScr cell in FindObjectsByType<CellScr>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -92,7 +96,6 @@ public class FactoryManagerScr : MonoBehaviour
         isBulder = false;
         ClearSelection();
     }
-
     private void HandleDeleteClick(CellScr clicked)
     {
         if (clicked.ownerGroup == null)
@@ -520,12 +523,29 @@ public class ZoneGroup
 
         return Color.white;
     }
-
-    public int production;
-    public int productionPower;
-
-    public void ProductionCycle()
+    public void Manufacturing()
     {
-        production += productionPower;
+        if (building is Workshop workshop)
+        {
+            workshop.ProductionCycle(cells.Count);
+            Debug.Log(workshop.production);
+        }
+
+
+        if (building is Storage)
+        {
+
+        }
+
+
+        if (building is Research)
+        {
+
+        }
+
+        if (building is Office)
+        {
+
+        }
     }
 }
