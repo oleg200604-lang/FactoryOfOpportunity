@@ -68,9 +68,14 @@ public class SchemeCommodity
 [System.Serializable]
 public class Raw : Commodity
 {
+    public RawTupe rawTupe;
+    public int amount;
 
 }
-
+public enum RawTupe
+{
+    cotton, leather, synthetics
+}
 [System.Serializable]
 public class Machinery : Commodity
 {
