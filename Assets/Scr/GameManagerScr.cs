@@ -1,12 +1,29 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManagerScr : MonoBehaviour
 {
-    public Scheme[] schemes;
-    public Commodity[] commodity;
+    public static GameManagerScr Instance { get; private set; }
+
+    public List<Scheme> schemes = new List<Scheme>();
+    public List<Commodity> commodity = new List<Commodity>();
+
     public float timer, timerSpeed, timeDay;
     public int day, season, year;
     public FactoryManagerScr factory;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogError("На сцені існує більше одного GameManagerScr!");
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
+
     private void Update()
     {
         if (timer <= 0)
@@ -23,7 +40,7 @@ public class GameManagerScr : MonoBehaviour
     {
         if (day < 7)
         {
-            day ++;
+            day++;
         }
         else
         {
@@ -44,6 +61,23 @@ public class GameManagerScr : MonoBehaviour
     {
         factory.Tic();
     }
+
+    // Реєструє одночасно новий товар і нову схему його виробництва.
+    // Викликається з панелі створення схеми (SchemeCreationPanel<T>).
+    public void RegisterSchemeAndCommodity(Commodity newCommodity, Scheme newScheme)
+    {
+        if (newCommodity == null || newScheme == null)
+        {
+            Debug.LogWarning("Не можна зареєструвати схему: товар або схема — null.");
+            return;
+        }
+
+        commodity.Add(newCommodity);
+        schemes.Add(newScheme);
+
+        Debug.Log($"Створено товар '{newCommodity.name}' ({newCommodity.GetType().Name}) " +
+                  $"і схему його виробництва.");
+    }
 }
 public abstract class Commodity
 {
@@ -55,8 +89,8 @@ public class Scheme
 {
     public SchemeCommodity[] inputs;
 
-    public int complexity;
-
+    public float complexity;
+    public int quality;
     public SchemeCommodity[] outputs;
 }
 [System.Serializable]
