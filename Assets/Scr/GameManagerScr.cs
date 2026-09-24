@@ -83,21 +83,16 @@ public abstract class Commodity
 {
     public string name;
     public int quality;
+    public int amount; 
 }
 [System.Serializable]
 public class Scheme
 {
-    public SchemeCommodity[] inputs;
+    public Commodity[] inputs;
 
     public float complexity;
     public int quality;
-    public SchemeCommodity[] outputs;
-}
-[System.Serializable]
-public class SchemeCommodity
-{
-    public Commodity commodity;
-    public int amount;
+    public Commodity[] outputs;
 }
 [System.Serializable]
 public class Raw : Commodity

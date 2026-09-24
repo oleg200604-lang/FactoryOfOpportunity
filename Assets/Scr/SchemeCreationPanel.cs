@@ -13,9 +13,6 @@ public enum CommodityTypeSelector
     Raw
 }
 
-// Єдина адаптивна панель створення схеми.
-// Не generic і не абстрактна -> можна вішати на об'єкт сцени напряму.
-// Кнопки в UI виставляють int-и, switch-и перетворюють їх на enum-и.
 public class SchemeCreationPanel : MonoBehaviour
 {
     [Header("Base commodity fields")]
@@ -23,7 +20,7 @@ public class SchemeCreationPanel : MonoBehaviour
     public InputField qualityField;
 
     [Header("Recipe")]
-    public SchemeCommodity[] inputs;
+    public Commodity[] inputs;
     public int complexity;
     public int outputAmount = 1;
 
@@ -37,8 +34,6 @@ public class SchemeCreationPanel : MonoBehaviour
     private MachineryType machineryType;
     private RawTupe rawType;
 
-    // ---- Кнопки вибору ТИПУ ТОВАРУ (Clothing / Electronics / ...) ----
-    // OnClick -> SelectCommodityType(1), (2), (3)...
     public void SelectCommodityType(int id)
     {
         switch (id)
@@ -55,7 +50,6 @@ public class SchemeCreationPanel : MonoBehaviour
         }
     }
 
-    // ---- Кнопки для полів кожного типу (лише активне для обраного типу) ----
     public void SelectClothingType(int id)
     {
         switch (id)
@@ -130,9 +124,6 @@ public class SchemeCreationPanel : MonoBehaviour
             default: Debug.LogWarning($"Невідомий RawTupe id: {id}"); break;
         }
     }
-
-    // ---- Створення ----
-    // Кнопка "Створити схему" -> CreateButton()
     public void CreateButton()
     {
         if (string.IsNullOrWhiteSpace(commodityNameField.text))
@@ -156,18 +147,14 @@ public class SchemeCreationPanel : MonoBehaviour
         {
             inputs = inputs,
             complexity = complexity,
-            outputs = new SchemeCommodity[]
+            outputs = new Commodity[]
             {
-                new SchemeCommodity { commodity = newCommodity, amount = outputAmount }
+                //new Commodity { commodity = newCommodity, amount = outputAmount }
             }
         };
 
         GameManagerScr.Instance.RegisterSchemeAndCommodity(newCommodity, newScheme);
-
-        ClosePanel();
     }
-
-    // Тут і живе адаптивність: додаєш новий тип товару -> додаєш один case.
     private Commodity BuildCommodity()
     {
         switch (commodityType)
@@ -195,10 +182,5 @@ public class SchemeCreationPanel : MonoBehaviour
     private int ParseQuality()
     {
         return int.TryParse(qualityField.text, out int q) ? q : 0;
-    }
-
-    private void ClosePanel()
-    {
-        gameObject.SetActive(false);
     }
 }

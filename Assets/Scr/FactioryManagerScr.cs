@@ -2,7 +2,6 @@
     using System.Linq;
     using UnityEngine;
     using UnityEngine.InputSystem;
-    using UnityEngine.Rendering.Universal;
 
 public class FactoryManagerScr : MonoBehaviour
 {
@@ -409,10 +408,6 @@ public class FactoryManagerScr : MonoBehaviour
 
             return null;
         }
-
-
-
-        
 
         ZoneGroup group = new ZoneGroup(groupName, cellsInRect, building);
 

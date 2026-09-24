@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CellScr : MonoBehaviour
@@ -52,11 +53,34 @@ public interface Building
 
 public class Workshop : Building
 {
-    public SchemeCommodity[] MachineTools;
+    public GameManagerScr gameManager;
+    public int[] machineTools;
+    public int schame;
     public int production;
     public void ProductionCycle(int productionPower)
     {
         production += productionPower;
+        while (gameManager.schemes[schame].complexity < production) 
+        {
+            ProductionCreation(gameManager.schemes[schame]);
+            production -= (int)gameManager.schemes[schame].complexity;
+        }
+    }
+
+    public void ProductionCreation(Scheme scheme)
+    {
+        for (int i = 0; gameManager.commodity.Count > i; i++) 
+        {
+            if (gameManager.commodity[i] == scheme.outputs[0])
+            {
+                gameManager.commodity[i].amount += scheme.outputs[0].amount;
+                break;
+            }
+            if (i + 1 == gameManager.commodity.Count)
+            {
+                gameManager.commodity.Add(scheme.outputs[0]);
+            }
+        }
     }
 }
 
@@ -72,6 +96,7 @@ public class Research : Building
 
 public class Storage : Building
 {
+
 }
 
 public class Office : Building
