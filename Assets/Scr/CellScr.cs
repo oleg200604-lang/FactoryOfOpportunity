@@ -54,33 +54,112 @@ public interface Building
 public class Workshop : Building
 {
     public GameManagerScr gameManager;
-    public int[] machineTools;
-    public int schame;
-    public int production;
+
+    // Індекс рецепту в GameManagerScr.schemes
+    public int schemeIndex = -1;
+
+    // Поточний прогрес виробництва
+    public float production;
+
+    public bool HasScheme()
+    {
+        return gameManager != null &&
+               schemeIndex >= 0 &&
+               schemeIndex < gameManager.schemes.Count;
+    }
+
+    public Scheme GetScheme()
+    {
+        if (!HasScheme())
+            return null;
+
+        return gameManager.schemes[schemeIndex];
+    }
+
+    public void SetScheme(int index)
+    {
+        if (gameManager == null)
+        {
+            Debug.LogWarning("Workshop: GameManagerScr не встановлений.");
+            return;
+        }
+
+        if (index < 0 || index >= gameManager.schemes.Count)
+        {
+            Debug.LogWarning($"Workshop: неправильний індекс схеми {index}.");
+            return;
+        }
+
+        schemeIndex = index;
+        production = 0;
+
+        Debug.Log($"Workshop отримав схему №{index}: " +
+                  $"complexity = {gameManager.schemes[index].complexity}");
+    }
+
     public void ProductionCycle(int productionPower)
     {
+        if (!HasScheme())
+            return;
+
+        Scheme scheme = GetScheme();
+
         production += productionPower;
-        while (gameManager.schemes[schame].complexity < production) 
+
+        while (production >= scheme.complexity)
         {
-            ProductionCreation(gameManager.schemes[schame]);
-            production -= (int)gameManager.schemes[schame].complexity;
+            ProductionCreation(scheme);
+            production -= scheme.complexity;
         }
     }
 
-    public void ProductionCreation(Scheme scheme)
+    private void ProductionCreation(Scheme scheme)
     {
-        for (int i = 0; gameManager.commodity.Count > i; i++) 
+        if (scheme.outputs == null || scheme.outputs.Length == 0)
         {
-            if (gameManager.commodity[i] == scheme.outputs[0])
+            Debug.LogWarning("У схеми немає output.");
+            return;
+        }
+
+        Commodity output = scheme.outputs[0];
+
+        if (output == null)
+            return;
+
+        // Поки що додаємо вироблений товар
+        // до глобального списку commodity.
+        Commodity existing = null;
+
+        for (int i = 0; i < gameManager.commodity.Count; i++)
+        {
+            if (IsSameCommodity(gameManager.commodity[i], output))
             {
-                gameManager.commodity[i].amount += scheme.outputs[0].amount;
+                existing = gameManager.commodity[i];
                 break;
             }
-            if (i + 1 == gameManager.commodity.Count)
-            {
-                gameManager.commodity.Add(scheme.outputs[0]);
-            }
         }
+
+        if (existing != null)
+        {
+            existing.amount += output.amount;
+        }
+        else
+        {
+            gameManager.commodity.Add(output);
+        }
+
+        Debug.Log($"Вироблено: {output.name} x{output.amount}");
+    }
+
+    private bool IsSameCommodity(Commodity a, Commodity b)
+    {
+        if (a == null || b == null)
+            return false;
+
+        if (a.GetType() != b.GetType())
+            return false;
+
+        return a.name == b.name;
     }
 }
 

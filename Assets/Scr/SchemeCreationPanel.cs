@@ -142,6 +142,7 @@ public class SchemeCreationPanel : MonoBehaviour
 
         newCommodity.name = commodityNameField.text;
         newCommodity.quality = ParseQuality();
+        newCommodity.amount = outputAmount;
 
         Scheme newScheme = new Scheme
         {
@@ -149,7 +150,7 @@ public class SchemeCreationPanel : MonoBehaviour
             complexity = complexity,
             outputs = new Commodity[]
             {
-                //new Commodity { commodity = newCommodity, amount = outputAmount }
+                newCommodity
             }
         };
 

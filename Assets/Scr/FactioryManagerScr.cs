@@ -48,7 +48,13 @@ public class FactoryManagerScr : MonoBehaviour
 
     public void Tic()
     {
-        groups[0].Manufacturing();
+        foreach (ZoneGroup group in groups)
+        {
+            if (group != null)
+            {
+                group.Manufacturing();
+            }
+        }
     }
     private void ClearRuntimeGroups()
     {
@@ -80,6 +86,33 @@ public class FactoryManagerScr : MonoBehaviour
         if (isDeleting == true)
         {
             HandleDeleteClick(clicked);
+            return;
+        }
+
+        HandleNormalClick(clicked);
+    }
+
+    private void HandleNormalClick(CellScr clicked)
+    {
+        if (clicked.ownerGroup == null)
+            return;
+
+        ZoneGroup group = clicked.ownerGroup;
+
+        if (group.building is Workshop)
+        {
+            ProductionZonePanelScr panel = FindFirstObjectByType<ProductionZonePanelScr>();
+
+            if (panel == null)
+            {
+                Debug.LogWarning(
+                    "ProductionZonePanel не знайдений на сцені."
+                );
+
+                return;
+            }
+
+            panel.Open(group);
         }
     }
     public void Bulds(int id)
@@ -316,6 +349,7 @@ public class FactoryManagerScr : MonoBehaviour
         int maxY = Mathf.Max(a.y, b.y);
         // Визначаємо тип будівлі
         Building building = null;
+
         switch (buildID)
         {
             case 1:
@@ -336,8 +370,12 @@ public class FactoryManagerScr : MonoBehaviour
 
             default:
                 Debug.LogWarning($"Невідомий buildID: {buildID}");
-
                 return null;
+        }
+
+        if (building is Workshop workshop)
+        {
+            workshop.gameManager = GameManagerScr.Instance;
         }
         if (building is Workshop || building is Research)
         {
