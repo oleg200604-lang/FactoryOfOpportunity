@@ -4676,7 +4676,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManagerScr
   schemes: []
   timer: 10
-  timerSpeed: 1
+  timerSpeed: 0
   timeDay: 10
   day: 0
   season: 0

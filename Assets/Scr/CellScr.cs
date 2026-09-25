@@ -1,3 +1,4 @@
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -189,13 +190,11 @@ public class Workshop : Building
         if (output == null)
             return;
 
-        // Поки що додаємо вироблений товар
-        // до глобального списку commodity.
         Commodity existing = null;
 
         for (int i = 0; i < gameManager.commodity.Count; i++)
         {
-            if (IsSameCommodity(gameManager.commodity[i], output))
+            if (gameManager.commodity[i] == output)
             {
                 existing = gameManager.commodity[i];
                 break;
@@ -210,21 +209,13 @@ public class Workshop : Building
         {
             Commodity produced = CreateCommodityCopy(output);
 
-            gameManager.commodity.Add(produced);
+            if (produced != null)
+            {
+                gameManager.commodity.Add(produced);
+            }
         }
 
         Debug.Log($"Вироблено: {output.name} x{output.amount}");
-    }
-
-    private bool IsSameCommodity(Commodity a, Commodity b)
-    {
-        if (a == null || b == null)
-            return false;
-
-        if (a.GetType() != b.GetType())
-            return false;
-
-        return a.name == b.name;
     }
 }
 
