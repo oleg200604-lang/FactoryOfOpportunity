@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class ProductionZonePanelScr : MonoBehaviour
 {
@@ -35,33 +36,50 @@ public class ProductionZonePanelScr : MonoBehaviour
     {
         if (recipeContainer == null)
         {
-            Debug.LogError("ProductionZonePanel: recipeContainer не встановлений.");
+            Debug.LogError(
+                "ProductionZonePanel: recipeContainer не встановлений."
+            );
             return;
         }
 
         if (recipeButtonPrefab == null)
         {
-            Debug.LogError("ProductionZonePanel: recipeButtonPrefab не встановлений.");
+            Debug.LogError(
+                "ProductionZonePanel: recipeButtonPrefab не встановлений."
+            );
             return;
         }
 
-        // Очистити старі кнопки
+        // Видаляємо старі кнопки
         for (int i = recipeContainer.childCount - 1; i >= 0; i--)
         {
             Destroy(recipeContainer.GetChild(i).gameObject);
         }
 
         if (GameManagerScr.Instance == null)
+        {
+            Debug.LogError(
+                "ProductionZonePanel: GameManagerScr.Instance == null."
+            );
             return;
+        }
 
+        // Створюємо кнопку для кожної схеми
         for (int i = 0; i < GameManagerScr.Instance.schemes.Count; i++)
         {
             int index = i;
 
-            Scheme scheme = GameManagerScr.Instance.schemes[index];
+            Scheme scheme =
+                GameManagerScr.Instance.schemes[index];
+
+            if (scheme == null)
+                continue;
 
             GameObject buttonObject =
-                Instantiate(recipeButtonPrefab, recipeContainer);
+                Instantiate(
+                    recipeButtonPrefab,
+                    recipeContainer
+                );
 
             Button button =
                 buttonObject.GetComponent<Button>();
@@ -72,15 +90,24 @@ public class ProductionZonePanelScr : MonoBehaviour
                     "RecipeButtonPrefab не має компонента Button."
                 );
 
+                Destroy(buttonObject);
                 continue;
             }
 
-            Text text =
-                buttonObject.GetComponentInChildren<Text>();
+            TMP_Text text =
+                buttonObject.GetComponentInChildren<TMP_Text>(
+                    true
+                );
 
             if (text != null)
             {
                 text.text = GetRecipeName(scheme);
+            }
+            else
+            {
+                Debug.LogWarning(
+                    "RecipeButtonPrefab не має TMP_Text всередині."
+                );
             }
 
             button.onClick.AddListener(
@@ -117,3 +144,4 @@ public class ProductionZonePanelScr : MonoBehaviour
         Close();
     }
 }
+
