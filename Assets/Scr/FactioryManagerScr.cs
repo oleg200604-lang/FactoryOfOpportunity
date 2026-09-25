@@ -1,7 +1,8 @@
     using System.Collections.Generic;
     using System.Linq;
     using UnityEngine;
-    using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 public class FactoryManagerScr : MonoBehaviour
 {
@@ -67,6 +68,14 @@ public class FactoryManagerScr : MonoBehaviour
     }
     private void Update()
     {
+        // Якщо натискаємо на UI — FactoryManager не повинен
+        // обробляти цей клік як клік по ігровій клітинці.
+        if (EventSystem.current != null &&
+            EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
+
         if (Mouse.current == null)
             return;
 
@@ -77,6 +86,7 @@ public class FactoryManagerScr : MonoBehaviour
 
         if (clicked == null)
             return;
+
         if (isBulder == true)
         {
             HandleCellClick(clicked);
@@ -91,6 +101,7 @@ public class FactoryManagerScr : MonoBehaviour
 
         HandleNormalClick(clicked);
     }
+
 
     private void HandleNormalClick(CellScr clicked)
     {

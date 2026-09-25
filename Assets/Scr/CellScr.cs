@@ -60,7 +60,70 @@ public class Workshop : Building
 
     // Поточний прогрес виробництва
     public float production;
+    private Commodity CreateCommodityCopy(Commodity source)
+    {
+        if (source is Clothing clothing)
+        {
+            return new Clothing
+            {
+                name = clothing.name,
+                quality = clothing.quality,
+                amount = clothing.amount,
+                clothingType = clothing.clothingType,
+                clothingStyleType = clothing.clothingStyleType
+            };
+        }
 
+        if (source is Electronics electronics)
+        {
+            return new Electronics
+            {
+                name = electronics.name,
+                quality = electronics.quality,
+                amount = electronics.amount,
+                electronicsType = electronics.electronicsType
+            };
+        }
+
+        if (source is Furniture furniture)
+        {
+            return new Furniture
+            {
+                name = furniture.name,
+                quality = furniture.quality,
+                amount = furniture.amount,
+                electronicsType = furniture.electronicsType
+            };
+        }
+
+        if (source is Machinery machinery)
+        {
+            return new Machinery
+            {
+                name = machinery.name,
+                quality = machinery.quality,
+                amount = machinery.amount,
+                machineryType = machinery.machineryType
+            };
+        }
+
+        if (source is Raw raw)
+        {
+            return new Raw
+            {
+                name = raw.name,
+                quality = raw.quality,
+                amount = raw.amount,
+                rawTupe = raw.rawTupe
+            };
+        }
+
+        Debug.LogWarning(
+            $"Невідомий тип Commodity: {source.GetType().Name}"
+        );
+
+        return null;
+    }
     public bool HasScheme()
     {
         return gameManager != null &&
@@ -145,7 +208,9 @@ public class Workshop : Building
         }
         else
         {
-            gameManager.commodity.Add(output);
+            Commodity produced = CreateCommodityCopy(output);
+
+            gameManager.commodity.Add(produced);
         }
 
         Debug.Log($"Вироблено: {output.name} x{output.amount}");
